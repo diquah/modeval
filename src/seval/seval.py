@@ -1,5 +1,4 @@
 import operator
-import math
 
 
 class Ruleset:
@@ -14,14 +13,6 @@ default_ruleset.operators = [
     [('^', operator.pow), ('**', operator.pow)],
     [('*', operator.mul), ('/', operator.truediv)],
     [('+', operator.add), ('-', operator.sub)]
-]
-default_ruleset.functions = [
-    ('sin', math.sin),
-    ('cos', math.cos),
-    ('tan', math.tan)
-]
-default_ruleset.variables = [
-    ('pi', math.pi)
 ]
 
 

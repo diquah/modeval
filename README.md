@@ -9,7 +9,7 @@ Seval (or Safe Eval) is a modular and secure string evaluation library that can 
 ```python
 from seval import Parser
 
-# Create new parser.
+# Create a new parser with the default ruleset.
 p = Parser()
 
 # Evalute string. Spaces are automatically removed.
