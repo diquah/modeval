@@ -17,7 +17,7 @@ setup(
     long_description=read_desc(),
     long_description_content_type='text/markdown',
     url='https://github.com/rubycookinson/modeval',
-    download_url='https://github.com/rubycookinson/modeval/archive/refs/tags/0.1.tar.gz',
+    download_url='https://github.com/rubycookinson/modeval/archive/refs/tags/1.0.tar.gz',
     keywords=['eval', 'expression', 'parser', 'math', 'string', 'modular'],
     install_requires=[],
     classifiers=[
