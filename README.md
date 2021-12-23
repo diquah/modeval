@@ -1,13 +1,13 @@
-# Seval
+# modeval
 
 ![](https://img.shields.io/badge/license-MIT-blue) ![](https://img.shields.io/badge/python-3.10-yellowgreen)
 
-Seval (or Safe Eval) is a modular and secure string evaluation library that can be used to create custom parsers or interpreters.
+Modeval (or Modular Eval) is a modular and secure string evaluation library that can be used to create custom parsers or interpreters.
 
 ### Basic Use
 
 ```python
-from seval import Parser
+from modeval import Parser
 
 # Create a new parser with the default ruleset.
 p = Parser()
@@ -21,7 +21,7 @@ print( p.eval('1 * (2-3)') )
 The Parser class will use a basic mathematical ruleset if no specific ruleset is specified. Use the default ruleset as a guide on how to make custom ones.
 
 ```python
-from seval import Parser, Ruleset
+from modeval import Parser, Ruleset
 
 import operator # (standard library)
 
@@ -41,10 +41,10 @@ Operator behavior is defined by the function attached to the sign/symbol in the 
 
 Note that the attached methods must have two inputs *in the correct order* (`L + R` is parsed as `add(L, R)`).
 
-Seval also supports functions like `sin()`, but they are not included in the default ruleset. To add them, reference the following:
+Modeval also supports functions like `sin()`, but they are not included in the default ruleset. To add them, reference the following:
 
 ```python
-from seval import Parser, Ruleset
+from modeval import Parser, Ruleset
 
 import math # (standard library)
 
@@ -61,9 +61,9 @@ p = Parser(ruleset = custom_ruleset)
 # You can now use "sin(...)" in the input string for eval().
 ```
 
-Speaking of `sin()`, what about `pi`? Seval also supports custom variables. They can be set like this:
+Speaking of `sin()`, what about `pi`? Modeval also supports custom variables. They can be set like this:
 ```python
-from seval import Parser, Ruleset
+from modeval import Parser, Ruleset
 
 import math # (standard library)
 

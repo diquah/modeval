@@ -7,7 +7,7 @@ def read_desc():
 
 
 setup(
-    name='seval',
+    name='modeval',
     packages=find_packages('src'),
     package_dir={'': 'src'},
     version='0.1',
@@ -15,8 +15,8 @@ setup(
     description='Pure Python math evaluater without using eval() and no dependencies.',
     author='Ruby Cookinson',
     long_description=read_desc(),
-    url='https://github.com/rubycookinson/seval',
-    download_url='https://github.com/rubycookinson/seval/archive/refs/tags/0.1.tar.gz',
+    url='https://github.com/rubycookinson/modeval',
+    download_url='https://github.com/rubycookinson/modeval/archive/refs/tags/0.1.tar.gz',
     keywords=['eval', 'expression', 'parser', 'math', 'string'],
     install_requires=[],
     classifiers=[
