@@ -7,7 +7,7 @@ def read_desc():
 
 
 setup(
-    name='pypemdas',
+    name='seval',
     packages=find_packages('src'),
     package_dir={'': 'src'},
     version='0.1',
