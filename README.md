@@ -8,6 +8,17 @@ Install using: `pip install modeval`
 
 ### Basic Use
 
+If performance is not really a concern, you can use the `meval()` function.
+
+```python
+from modeval import meval
+
+# Evalute string. Spaces are automatically removed.
+print( meval('1 * (2-3)') )
+```
+
+Creating a parser class is more efficient for crunching lots of expressions with the same ruleset.
+
 ```python
 from modeval import Parser
 
@@ -18,14 +29,16 @@ p = Parser()
 print( p.eval('1 * (2-3)') )
 ```
 
-Because spaces are removed, `1 3 + 2` is parsed as `13+2`.
+
 
 ### Rulesets 
 
 The Parser class will use a basic mathematical ruleset if no specific ruleset is specified. Use the default ruleset as a guide on how to make custom ones.
 
+***Warning:*** You cannot change the ruleset of a parser once it has been initialized. Create a new parser instead.
+
 ```python
-from modeval import Parser, Ruleset
+from modeval import Parser, Ruleset, meval
 
 import operator # (standard library)
 
@@ -39,6 +52,7 @@ default_ruleset.operators = [
 ]
 
 p = Parser(ruleset = default_ruleset)
+meval('1+1', ruleset=default_ruleset) # Rulesets can also be supplied to meval()
 ```
 
 Operator behavior is defined by the function attached to the sign/symbol in the tuple.

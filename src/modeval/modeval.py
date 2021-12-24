@@ -34,7 +34,7 @@ scientific_ruleset.variables = [
 
 
 class Parser:
-    def __init__(self, ruleset=None, rounding=8):
+    def __init__(self, ruleset: Ruleset = None, rounding: int = 8):
         if ruleset is None:
             ruleset = default_ruleset
 
@@ -121,8 +121,8 @@ class Parser:
                     buffer = ''
 
                 if seg in [*self.op_filter, *self.functions, *self.varTranslateList.values()]:
-                    if i-1 >= 0:
-                        if grouped_expr[i-1] in self.op_filter and seg in self.op_filter:
+                    if i - 1 >= 0:
+                        if grouped_expr[i - 1] in self.op_filter and seg in self.op_filter:
                             raise Exception('Two operators in a row.')
 
                     clean_expr.append(seg)
@@ -176,8 +176,8 @@ class Parser:
             negate = False
             while i < len(arr):
                 if isinstance(arr[i], float):
-                    if i-1 >= 0:
-                        if isinstance(arr[i-1], float):
+                    if i - 1 >= 0:
+                        if isinstance(arr[i - 1], float):
                             raise Exception('Expected operator between two numbers.')
                     if negate:
                         arr[i] *= -1
@@ -243,6 +243,11 @@ class Parser:
         if result.is_integer():
             result = int(result)
         return result
+
+
+def meval(input_str: str, ruleset: Ruleset = default_ruleset):
+    temp_parser = Parser(ruleset=ruleset)
+    return temp_parser.eval(input_str)
 
 
 if __name__ == '__main__':
