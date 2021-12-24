@@ -70,10 +70,12 @@ class Parser:
             self.fun_lookup[name] = fun[1]
             self.functions.append(name)
 
+        self.varTranslateList = {}
         self.var_lookup = {}
         self.variables = []
         for var in self.ruleset.variables:
             name = var[0]
+            self.varTranslateList[name] = chr(9000 + len(self.varTranslateList))
             self.var_lookup[name] = var[1]
             self.variables.append(name)
 
@@ -118,29 +120,20 @@ class Parser:
                     clean_expr.append(buffer)
                     buffer = ''
 
-                ops_and_fun = [*self.op_filter, *self.functions]
-                if seg in ops_and_fun:
+                if seg in [*self.op_filter, *self.functions, *self.varTranslateList.values()]:
+                    if i-1 >= 0:
+                        if grouped_expr[i-1] in [*self.op_filter, *self.functions, *self.varTranslateList.values()]:
+                            raise Exception('Invalid mathematical expression.')
+
                     clean_expr.append(seg)
                 elif seg not in '1234567890.':
                     unknown = ''
                     for j in grouped_expr[i:]:
-                        if isinstance(j, str):
+                        if j not in '1234567890.':
                             unknown += j
                         else:
                             break
-
-                    for var in self.variables:
-                        var_replace = unknown.replace(var, str(self.var_lookup[var]))
-                        if var_replace != unknown:
-                            clean_expr.append(seg)
-                            break
-                    if i-1 >= 0:
-                        if not grouped_expr[i-1] in self.ops:
-                            raise Exception('Expected operator inbetween numbers.')
-                    if i+1 < len(grouped_expr):
-                        if not grouped_expr[i+1] in self.ops:
-                            raise Exception('Expected operator inbetween numbers.')
-                        raise Exception(f"'{unknown}' is not a recognized variable, function, or operator.")
+                    raise Exception(f"'{unknown}' is not a recognized variable, function, or operator.")
             else:
                 clean_expr.append(self._clean(seg))
 
@@ -152,6 +145,9 @@ class Parser:
                 for k, v in self.translateList.items():
                     if n == v:
                         clean_expr[i] = n.replace(v, k)
+                for k, v in self.varTranslateList.items():
+                    if n == v:
+                        clean_expr[i] = self.var_lookup[n.replace(v, k)]
 
         return clean_expr
 
@@ -180,6 +176,9 @@ class Parser:
             negate = False
             while i < len(arr):
                 if isinstance(arr[i], float):
+                    if i-1 >= 0:
+                        if isinstance(arr[i-1], float):
+                            raise Exception('Expected operator between two numbers.')
                     if negate:
                         arr[i] *= -1
                         negate = False
@@ -216,7 +215,7 @@ class Parser:
         raw_in = raw_in.replace(' ', '')
 
         translated_in = raw_in
-        for k, v in [*self.translateList.items(), *self.funTranslateList.items()]:
+        for k, v in [*self.translateList.items(), *self.funTranslateList.items(), *self.varTranslateList.items()]:
             translated_in = translated_in.replace(k, v)
 
         raw_grouped = self._parse_parentheses(translated_in)

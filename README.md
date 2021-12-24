@@ -4,6 +4,8 @@
 
 Modeval (or Modular Eval) is a modular and secure string evaluation library that can be used to create custom parsers or interpreters.
 
+Install using: `pip install modeval`
+
 ### Basic Use
 
 ```python
@@ -15,6 +17,8 @@ p = Parser()
 # Evalute string. Spaces are automatically removed.
 print( p.eval('1 * (2-3)') )
 ```
+
+Because spaces are removed, `1 3 + 2` is parsed as `13+2`.
 
 ### Rulesets 
 
@@ -77,10 +81,10 @@ p = Parser(ruleset = custom_ruleset)
 # Now you can use pi as you would expect (pi*3/2)
 ```
 
-### Super Technical Limitations
+### Technical Limitations
 
 If you're planning on doing something crazy with this library, I'd read this.
 
-Multi-character operators and functions are assigned unicode characters while being processed so there is a limit of around 4000 variables (and also a very high upper limit of functions). If this is a problem you can increase the offset of the ***function*** unicode character conversion. Decreasing the offset of the operators runs the risk of an operator getting translated into a regular number.
+Mult-character operators/variables/functions are assigned unique single unicode characters, meaning there is a limit for the amount of each you can have (around 4000 for each). This shouldn't be a problem in most cases.
 
-A possible fix for this is automatically allocating unicode characters based on the number of operators and variables but this is not implemented as of now.
+A possible fix for this is dynamically allocating unicode characters, but this is not implemented yet.
