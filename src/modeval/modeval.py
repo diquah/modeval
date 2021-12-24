@@ -129,7 +129,9 @@ class Parser:
                 elif seg not in '1234567890.':
                     unknown = ''
                     for j in grouped_expr[i:]:
-                        if j not in '1234567890.':
+                        if isinstance(j, list):
+                            break
+                        elif j not in '1234567890.':
                             unknown += j
                         else:
                             break
@@ -245,7 +247,9 @@ class Parser:
         return result
 
 
-def meval(input_str: str, ruleset: Ruleset = default_ruleset):
+def meval(input_str: str, ruleset: Ruleset = None):
+    if ruleset is None:
+        ruleset = default_ruleset
     temp_parser = Parser(ruleset=ruleset)
     return temp_parser.eval(input_str)
 
@@ -255,8 +259,7 @@ if __name__ == '__main__':
     try:
         while True:
             try:
-                print(p.eval(input('> ')))
-                print()
+                print(p.eval(input('>> ')))
             except KeyboardInterrupt:
                 break
             except Exception as e:

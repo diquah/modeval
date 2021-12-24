@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.2a1'
+VERSION = '1.2a2'
 
 
 def read_desc():
