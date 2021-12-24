@@ -180,7 +180,7 @@ class Parser:
                 if isinstance(arr[i], float):
                     if i - 1 >= 0:
                         if isinstance(arr[i - 1], float):
-                            raise Exception('Expected operator between two numbers.')
+                            raise Exception('Expected operator in-between two numbers.')
                     if negate:
                         arr[i] *= -1
                         negate = False
@@ -221,7 +221,7 @@ class Parser:
         for i, c in enumerate(raw_in):
             if i-2 >= 0:
                 if c in '1234567890.' and raw_in[i-2] in '1234567890.' and raw_in[i-1] == ' ':
-                    raise Exception('Found space between two digets, but no operator inbetween.')
+                    raise Exception('Found space between two digits, but no operator in-between.')
 
         raw_in = raw_in.replace(' ', '')
 
