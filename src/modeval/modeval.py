@@ -122,8 +122,8 @@ class Parser:
 
                 if seg in [*self.op_filter, *self.functions, *self.varTranslateList.values()]:
                     if i-1 >= 0:
-                        if grouped_expr[i-1] in [*self.op_filter, *self.functions, *self.varTranslateList.values()]:
-                            raise Exception('Invalid mathematical expression.')
+                        if grouped_expr[i-1] in self.op_filter and seg in self.op_filter:
+                            raise Exception('Two operators in a row.')
 
                     clean_expr.append(seg)
                 elif seg not in '1234567890.':
@@ -202,6 +202,7 @@ class Parser:
                         if i + 1 < len(arr) and isinstance(arr[i + 1], list):
                             arr[i] = self._function(arr[i], self._calc(arr[i + 1]))
                             arr.pop(i + 1)
+                            i -= 1
                         else:
                             raise Exception('Function was not supplied parameter.')
                 elif isinstance(arr[i], list):

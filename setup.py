@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.1'
+VERSION = '1.2a0'
 
 
 def read_desc():
@@ -14,7 +14,7 @@ setup(
     package_dir={'': 'src'},
     version=VERSION,
     license='MIT',
-    description='Pure Python math evaluater without using eval() and no dependencies.',
+    description='Pure Python customizable math evaluater without eval() and no dependencies.',
     author='Diquah',
     long_description=read_desc(),
     long_description_content_type='text/markdown',
