@@ -4,7 +4,7 @@
 
 Modeval (or Modular Eval) is a modular and secure string evaluation library that can be used to create custom parsers or interpreters.
 
-Install using: `pip install modeval`
+Install with: `pip install modeval`
 
 ### Basic Use
 
@@ -31,7 +31,7 @@ print( p.eval('1 * (2-3)') )
 
 ### Rulesets 
 
-The Parser class will use a basic mathematical ruleset if no specific ruleset is specified. Use the default ruleset as a guide on how to make custom ones.
+The Parser class will use a basic mathematical ruleset if no ruleset is specified. Use the default ruleset as a guide on how to make custom ones.
 
 :warning: ***Warning:*** You cannot change the ruleset of a parser once it has been initialized. Create a new parser instead.
 
@@ -53,9 +53,7 @@ p = Parser(ruleset = default_ruleset)
 meval('1+1', ruleset=default_ruleset) # Rulesets can also be supplied to meval()
 ```
 
-Operator behavior is defined by the function attached to the sign/symbol in the tuple.
-
-Note that the attached methods must have two inputs *in the correct order* (`L + R` is parsed as `add(L, R)`).
+The second item in the tuple must be the function that will be called when the operator is used. The attached method must have two inputs *in the correct order* (`L + R` is parsed as `add(L, R)`).
 
 Modeval also supports functions like `sin()`, but they are not included in the default ruleset. However, they are included in `scientific_ruleset` which can be imported and used. Implementing functions works as follows:
 
@@ -90,7 +88,7 @@ custom_ruleset.variables = [
 ]
 
 p = Parser(ruleset = custom_ruleset)
-# Now you can use pi as you would expect, i.e. pi/180.
+# Now you can use "pi" just like any other number.
 ```
 
 ### Technical Limitations

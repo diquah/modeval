@@ -14,7 +14,7 @@ setup(
     package_dir={'': 'src'},
     version=VERSION,
     license='MIT',
-    description='Pure Python customizable math evaluater without eval() and no dependencies.',
+    description='Pure Python modular math evaluater without using built-in eval() and no dependencies.',
     author='Diquah',
     long_description=read_desc(),
     long_description_content_type='text/markdown',
