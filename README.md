@@ -59,7 +59,7 @@ Operator behavior is defined by the function attached to the sign/symbol in the 
 
 Note that the attached methods must have two inputs *in the correct order* (`L + R` is parsed as `add(L, R)`).
 
-Modeval also supports functions like `sin()`, but they are not included in the default ruleset. To add them, reference the following:
+Modeval also supports functions like `sin()`, but they are not included in the default ruleset. However, they are included in `scientific_ruleset` which can be imported and used. Implementing functions works as follows:
 
 ```python
 from modeval import Parser, Ruleset
@@ -88,11 +88,11 @@ import math # (standard library)
 custom_ruleset = Ruleset()
 
 custom_ruleset.variables = [
-    ('pi', math.pi) # Keep in mind this needs to be a value and not a function.
+    ('pi', math.pi) # Keep in mind this needs to be a value and not a reference to function.
 ]
 
 p = Parser(ruleset = custom_ruleset)
-# Now you can use pi as you would expect (pi*3/2)
+# Now you can use pi as you would expect (pi/180)
 ```
 
 ### Technical Limitations
