@@ -2,3 +2,4 @@
 .idea/
 dist/
 src/modeval.egg-info
+build_shortcuts
