@@ -1,4 +1,5 @@
 import operator
+import math
 
 
 class Ruleset:
@@ -13,6 +14,22 @@ default_ruleset.operators = [
     [('^', operator.pow), ('**', operator.pow)],
     [('*', operator.mul), ('/', operator.truediv)],
     [('+', operator.add), ('-', operator.sub)]
+]
+
+scientific_ruleset = Ruleset()
+scientific_ruleset.operators = [
+    [('^', operator.pow), ('**', operator.pow)],
+    [('*', operator.mul), ('/', operator.truediv), ('%', operator.mod)],
+    [('+', operator.add), ('-', operator.sub)],
+]
+scientific_ruleset.functions = [
+    ('sin', math.sin),
+    ('cos', math.cos),
+    ('tan', math.tan),
+]
+scientific_ruleset.variables = [
+    ('pi', math.pi),
+    ('e', math.e),
 ]
 
 
@@ -92,7 +109,7 @@ class Parser:
         clean_expr = []
 
         buffer = ''
-        for seg in grouped_expr:
+        for i, seg in enumerate(grouped_expr):
             if not isinstance(seg, list):
                 if seg in '1234567890.':
                     buffer += seg
@@ -101,8 +118,29 @@ class Parser:
                     clean_expr.append(buffer)
                     buffer = ''
 
-                if seg in [*self.op_filter, *self.functions]:
+                ops_and_fun = [*self.op_filter, *self.functions]
+                if seg in ops_and_fun:
                     clean_expr.append(seg)
+                elif seg not in '1234567890.':
+                    unknown = ''
+                    for j in grouped_expr[i:]:
+                        if isinstance(j, str):
+                            unknown += j
+                        else:
+                            break
+
+                    for var in self.variables:
+                        var_replace = unknown.replace(var, str(self.var_lookup[var]))
+                        if var_replace != unknown:
+                            clean_expr.append(seg)
+                            break
+                    if i-1 >= 0:
+                        if not grouped_expr[i-1] in self.ops:
+                            raise Exception('Expected operator inbetween numbers.')
+                    if i+1 < len(grouped_expr):
+                        if not grouped_expr[i+1] in self.ops:
+                            raise Exception('Expected operator inbetween numbers.')
+                        raise Exception(f"'{unknown}' is not a recognized variable, function, or operator.")
             else:
                 clean_expr.append(self._clean(seg))
 
@@ -162,11 +200,11 @@ class Parser:
                     elif arr[i] in ops:
                         op = arr[i]
                     elif arr[i] in self.functions:
-                        if isinstance(arr[i+1], list):
-                            arr[i] = self._function(arr[i], self._calc(arr[i+1]))
-                            arr.pop(i+1)
+                        if i + 1 < len(arr) and isinstance(arr[i + 1], list):
+                            arr[i] = self._function(arr[i], self._calc(arr[i + 1]))
+                            arr.pop(i + 1)
                         else:
-                            raise ValueError('Test')
+                            raise Exception('Function was not supplied parameter.')
                 elif isinstance(arr[i], list):
                     arr[i] = self._calc(arr[i])
                     i -= 1
@@ -177,11 +215,7 @@ class Parser:
     def eval(self, raw_in: str):
         raw_in = raw_in.replace(' ', '')
 
-        var_fill = raw_in
-        for var in self.variables:
-            var_fill = var_fill.replace(var, str(self.var_lookup[var]))
-
-        translated_in = var_fill
+        translated_in = raw_in
         for k, v in [*self.translateList.items(), *self.funTranslateList.items()]:
             translated_in = translated_in.replace(k, v)
 
@@ -206,7 +240,7 @@ class Parser:
 
 
 if __name__ == '__main__':
-    p = Parser()
+    p = Parser(ruleset=scientific_ruleset)
     try:
         while True:
             print(p.eval(input('> ')))

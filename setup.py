@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
 
+VERSION = '1.1a'
+
 
 def read_desc():
     with open('README.md', 'r') as f:
@@ -10,14 +12,14 @@ setup(
     name='modeval',
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    version='1.0',
+    version=VERSION,
     license='MIT',
     description='Pure Python math evaluater without using eval() and no dependencies.',
-    author='Ruby Cookinson',
+    author='Diquah',
     long_description=read_desc(),
     long_description_content_type='text/markdown',
-    url='https://github.com/rubycookinson/modeval',
-    download_url='https://github.com/rubycookinson/modeval/archive/refs/tags/1.0.tar.gz',
+    url='https://github.com/diquah/modeval',
+    download_url=f'https://github.com/diquah/modeval/archive/refs/tags/v{VERSION}.tar.gz',
     keywords=['eval', 'expression', 'parser', 'math', 'string', 'modular'],
     install_requires=[],
     classifiers=[
