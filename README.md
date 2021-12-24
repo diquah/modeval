@@ -35,7 +35,7 @@ print( p.eval('1 * (2-3)') )
 
 The Parser class will use a basic mathematical ruleset if no specific ruleset is specified. Use the default ruleset as a guide on how to make custom ones.
 
-***Warning:*** You cannot change the ruleset of a parser once it has been initialized. Create a new parser instead.
+:warning: ***Warning:*** You cannot change the ruleset of a parser once it has been initialized. Create a new parser instead.
 
 ```python
 from modeval import Parser, Ruleset, meval
