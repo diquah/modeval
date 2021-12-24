@@ -29,8 +29,6 @@ p = Parser()
 print( p.eval('1 * (2-3)') )
 ```
 
-
-
 ### Rulesets 
 
 The Parser class will use a basic mathematical ruleset if no specific ruleset is specified. Use the default ruleset as a guide on how to make custom ones.
@@ -92,7 +90,7 @@ custom_ruleset.variables = [
 ]
 
 p = Parser(ruleset = custom_ruleset)
-# Now you can use pi as you would expect (pi/180)
+# Now you can use pi as you would expect, i.e. pi/180.
 ```
 
 ### Technical Limitations

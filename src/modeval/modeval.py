@@ -218,6 +218,11 @@ class Parser:
             return None
 
     def eval(self, raw_in: str):
+        for i, c in enumerate(raw_in):
+            if i-2 >= 0:
+                if c in '1234567890.' and raw_in[i-2] in '1234567890.' and raw_in[i-1] == ' ':
+                    raise Exception('Found space between two digets, but no operator inbetween.')
+
         raw_in = raw_in.replace(' ', '')
 
         translated_in = raw_in
