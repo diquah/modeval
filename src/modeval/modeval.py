@@ -210,7 +210,10 @@ class Parser:
                     i -= 1
                 i += 1
 
-        return arr[0]
+        if len(arr) > 0:
+            return arr[0]
+        else:
+            return None
 
     def eval(self, raw_in: str):
         raw_in = raw_in.replace(' ', '')
@@ -226,6 +229,9 @@ class Parser:
         clean_grouped = self._clean(fun_grouped)
 
         calc = self._calc(clean_grouped)
+
+        if calc is None:
+            return None
 
         if self.rounding > 0:
             result = round(calc, self.rounding)
@@ -243,6 +249,12 @@ if __name__ == '__main__':
     p = Parser(ruleset=scientific_ruleset)
     try:
         while True:
-            print(p.eval(input('> ')))
+            try:
+                print(p.eval(input('> ')))
+                print()
+            except KeyboardInterrupt:
+                break
+            except Exception as e:
+                print(e.args[0])
     except KeyboardInterrupt:
         pass
