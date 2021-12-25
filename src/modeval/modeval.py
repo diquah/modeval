@@ -40,8 +40,15 @@ class Parser:
 
         self.ruleset = ruleset
         self.rounding = rounding
-
         self.unicode_char_count = 0
+
+        keys = []
+        # Check for multiple assignments to the same character(s).
+        for key in [*self.ruleset.functions, *self.ruleset.variables, *[x for y in self.ruleset.operators for x in y]]:
+            if key[0] in keys:
+                raise Exception(f"'{key[0]}' is used more than once as a operator/function/variable.")
+            keys.append(key)
+
         # Initialize operators in different formats for eval function.
         self.translateList = {}
         self.op_lookup = {}
