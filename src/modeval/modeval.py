@@ -47,7 +47,7 @@ class Parser:
         for key in [*self.ruleset.functions, *self.ruleset.variables, *[x for y in self.ruleset.operators for x in y]]:
             if key[0] in keys:
                 raise Exception(f"'{key[0]}' is used more than once as a operator/function/variable.")
-            keys.append(key)
+            keys.append(key[0])
 
         # Initialize operators in different formats for eval function.
         self.translateList = {}
@@ -63,7 +63,6 @@ class Parser:
                 if len(symbol) == 1:
                     self.op_filter.append(symbol)
                 else:
-                    # Convert multi character operators to unique single unicode character.
                     self.translateList[symbol] = self._get_free_unicode_char()
                     self.op_filter.append(self.translateList[symbol])
             self.ops.append(new_group)
