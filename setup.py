@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.3a0'
+VERSION = '1.3'
 
 
 def read_desc():
@@ -28,6 +28,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.10',
     ],
 )
