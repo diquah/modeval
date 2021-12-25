@@ -22,6 +22,7 @@ setup(
     download_url=f'https://github.com/diquah/modeval/archive/refs/tags/v{VERSION}.tar.gz',
     keywords=['eval', 'expression', 'parser', 'math', 'string', 'modular'],
     install_requires=[],
+    python_requires='>=3.7',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

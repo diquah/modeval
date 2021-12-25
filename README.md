@@ -1,6 +1,6 @@
 # modeval
 
-![](https://img.shields.io/badge/license-MIT-blue) ![](https://img.shields.io/badge/python-3.10-yellowgreen)
+![](https://img.shields.io/badge/license-MIT-blue) ![](https://img.shields.io/badge/python-3.7_--_3.10-yellowgreen)
 
 Modeval (or Modular Eval) is a modular and secure string evaluation library that can be used to create custom parsers or interpreters.
 
