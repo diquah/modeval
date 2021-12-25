@@ -34,7 +34,7 @@ scientific_ruleset.variables = [
 
 
 # Used by parenthesis matching function.
-def _push(self, obj, l, depth):
+def _push(obj, l, depth):
     while depth:
         l = l[-1]
         depth -= 1
@@ -43,19 +43,19 @@ def _push(self, obj, l, depth):
 
 
 # Groups a string into nested arrays based on parenthesis in the input string.
-def parse_parentheses(self, s):
+def parse_parentheses(s):
     groups = []
     depth = 0
 
     try:
         for char in s:
             if char == '(':
-                self._push([], groups, depth)
+                _push([], groups, depth)
                 depth += 1
             elif char == ')':
                 depth -= 1
             else:
-                self._push(char, groups, depth)
+                _push(char, groups, depth)
     except IndexError:
         raise ValueError('Parentheses mismatch')
 
@@ -81,7 +81,7 @@ class Parser:
                 raise Exception(f"'{key[0]}' is used more than once as a operator/function/variable.")
             keys.append(key[0])
 
-        # Initialize operators in different formats used by different steps.
+        # Initialize operators in different formats used by different steps in the eval process.
         self.translateList = {}
         self.op_lookup = {}
         self.op_filter = []
@@ -99,17 +99,19 @@ class Parser:
                     self.op_filter.append(self.translateList[symbol])
             self.ops.append(new_group)
 
-        # Initialize functions in different formats used by different steps.
+        # Initialize functions in different formats used by different steps in the eval process.
         self.funTranslateList = {}
         self.fun_lookup = {}
+        self.fun_filter = []
         self.functions = []
         for fun in self.ruleset.functions:
             name = fun[0]
             self.funTranslateList[name] = self._get_free_unicode_char()
+            self.fun_filter.append(self.funTranslateList[name])
             self.fun_lookup[name] = fun[1]
             self.functions.append(name)
 
-        # Initialize variables in different formats used by different steps.
+        # Initialize variables in different formats used by different steps in the eval process.
         self.varTranslateList = {}
         self.var_lookup = {}
         self.variables = []
@@ -131,36 +133,38 @@ class Parser:
         buffer = ''
         for i, seg in enumerate(grouped_expr):
             if not isinstance(seg, list):
-                if seg in '1234567890.':
+                if seg in '1234567890.':  # If item is part of a number, add to buffer.
                     buffer += seg
-                elif buffer != '':
+                elif buffer != '':  # If item is not part of a number and buffer is not empty, flush buffer.
                     buffer = float(buffer)
                     clean_expr.append(buffer)
                     buffer = ''
 
-                if seg in [*self.op_filter, *self.functions, *self.varTranslateList.values()]:
+                if seg in [*self.op_filter, *self.fun_filter, *self.varTranslateList.values()]:
                     if i - 1 >= 0:
                         if grouped_expr[i - 1] in self.op_filter and seg in self.op_filter:
                             raise Exception('Two operators in a row.')
 
+                    # Leave any operators, functions, and variables alone.
                     clean_expr.append(seg)
-                elif seg not in '1234567890.':
+                elif seg not in '1234567890.':  # If item is not recognized, handle errors.
                     unknown = ''
                     for j in grouped_expr[i:]:
                         if isinstance(j, list):
                             break
-                        elif j not in '1234567890.'.join(self.op_filter):
+                        elif j not in '1234567890.':
                             unknown += j
                         else:
                             break
                     raise Exception(f"'{unknown}' is not a recognized variable, function, or operator.")
             else:
+                # If item is an array (inside parenthesis), handle recursively.
                 clean_expr.append(self._clean(seg))
 
-        if buffer != '':
+        if buffer != '':   # If buffer is not cleared after last iteration, flush.
             clean_expr.append(float(buffer))
 
-        for i, n in enumerate(clean_expr):
+        for i, n in enumerate(clean_expr):   # Translate single unicode character to corresponding op/var.
             if isinstance(n, str):
                 for k, v in self.translateList.items():
                     if n == v:
@@ -168,20 +172,11 @@ class Parser:
                 for k, v in self.varTranslateList.items():
                     if n == v:
                         clean_expr[i] = self.var_lookup[n.replace(v, k)]
-
-        return clean_expr
-
-    # Replaces function unicode characters with the original function name.
-    def _fun(self, grouped_expr):
-        for i, n in enumerate(grouped_expr):
-            if isinstance(n, str):
                 for k, v in self.funTranslateList.items():
                     if n == v:
-                        grouped_expr[i] = n.replace(v, k)
-            elif isinstance(n, list):
-                grouped_expr[i] = self._fun(n)
+                        clean_expr[i] = n.replace(v, k)
 
-        return grouped_expr
+        return clean_expr
 
     # Applies an operator based on the symbol defined in the ruleset.
     def _operate(self, a, symbol, b):
@@ -251,11 +246,9 @@ class Parser:
         for k, v in [*self.translateList.items(), *self.funTranslateList.items(), *self.varTranslateList.items()]:
             translated_in = translated_in.replace(k, v)
 
-        raw_grouped = self.parse_parentheses(translated_in)
+        raw_grouped = parse_parentheses(translated_in)
 
-        fun_grouped = self._fun(raw_grouped)
-
-        clean_grouped = self._clean(fun_grouped)
+        clean_grouped = self._clean(raw_grouped)
 
         calc = self._calc(clean_grouped)
 
@@ -287,8 +280,9 @@ if __name__ == '__main__':
     p = Parser(ruleset=scientific_ruleset)
     try:
         while True:
+            print(p.eval(input('>> ')))
             try:
-                print(p.eval(input('>> ')))
+                pass
             except KeyboardInterrupt:
                 break
             except Exception as e:
