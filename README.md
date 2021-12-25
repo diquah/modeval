@@ -93,8 +93,4 @@ p = Parser(ruleset = custom_ruleset)
 
 ### Technical Limitations
 
-If you're planning on doing something crazy with this library, I'd read this.
-
-Mult-character operators/variables/functions are assigned unique single unicode characters, meaning there is a limit for the amount of each you can have (around 4000 for each). This shouldn't be a problem in most cases.
-
-A possible fix for this is dynamically allocating unicode characters, but this is not implemented yet.
+Multi-character operators, functions, and variables are assigned a single unicode character during processing. This means that you have a limit of 143,697 operators/functions/variables. This is 1,000 less than the unicode limit, since the first few unicode characters are used for letters and numbers.
