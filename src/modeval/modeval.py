@@ -49,7 +49,7 @@ class Parser:
                 raise Exception(f"'{key[0]}' is used more than once as a operator/function/variable.")
             keys.append(key[0])
 
-        # Initialize operators in different formats for eval function.
+        # Initialize operators in different formats used by different steps.
         self.translateList = {}
         self.op_lookup = {}
         self.op_filter = []
@@ -67,7 +67,7 @@ class Parser:
                     self.op_filter.append(self.translateList[symbol])
             self.ops.append(new_group)
 
-        # Initialize functions in different formats for eval function.
+        # Initialize functions in different formats used by different steps.
         self.funTranslateList = {}
         self.fun_lookup = {}
         self.functions = []
@@ -77,6 +77,7 @@ class Parser:
             self.fun_lookup[name] = fun[1]
             self.functions.append(name)
 
+        # Initialize variables in different formats used by different steps.
         self.varTranslateList = {}
         self.var_lookup = {}
         self.variables = []
@@ -86,10 +87,12 @@ class Parser:
             self.var_lookup[name] = var[1]
             self.variables.append(name)
 
+    # Fetch a unique unicode character that can be used in place of multi-character ops/funcs/vars during parsing.
     def _get_free_unicode_char(self):
         self.unicode_char_count += 1
         return chr(1000 + self.unicode_char_count)
 
+    # Used by parenthesis matching function.
     def _push(self, obj, l, depth):
         while depth:
             l = l[-1]
@@ -97,6 +100,7 @@ class Parser:
 
         l.append(obj)
 
+    # Groups a string into nested arrays based on parenthesis in the input string.
     def _parse_parentheses(self, s):
         groups = []
         depth = 0
@@ -118,6 +122,7 @@ class Parser:
         else:
             return groups
 
+    # Pre-processes a grouped expression before calculations are made.
     def _clean(self, grouped_expr):
         clean_expr = []
 
@@ -142,7 +147,7 @@ class Parser:
                     for j in grouped_expr[i:]:
                         if isinstance(j, list):
                             break
-                        elif j not in '1234567890.':
+                        elif j not in '1234567890.'.join(self.op_filter):
                             unknown += j
                         else:
                             break
@@ -164,6 +169,7 @@ class Parser:
 
         return clean_expr
 
+    # Replaces function unicode characters with the original function name.
     def _fun(self, grouped_expr):
         for i, n in enumerate(grouped_expr):
             if isinstance(n, str):
@@ -175,12 +181,15 @@ class Parser:
 
         return grouped_expr
 
+    # Applies an operator based on the symbol defined in the ruleset.
     def _operate(self, a, symbol, b):
         return self.op_lookup[symbol](a, b)
 
+    # Applies a function based on the string name defined in the ruleset.
     def _function(self, fun_name, a):
         return self.fun_lookup[fun_name](a)
 
+    # Reduces and simplifies nested arrays, numbers, operators, and functions recursively.
     def _calc(self, arr):
         for ops in self.ops:
             i = 0
@@ -250,6 +259,8 @@ class Parser:
 
         if calc is None:
             return None
+        elif isinstance(calc, complex):
+            calc = calc.real
 
         if self.rounding > 0:
             result = round(calc, self.rounding)
