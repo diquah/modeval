@@ -33,6 +33,38 @@ scientific_ruleset.variables = [
 ]
 
 
+# Used by parenthesis matching function.
+def _push(self, obj, l, depth):
+    while depth:
+        l = l[-1]
+        depth -= 1
+
+    l.append(obj)
+
+
+# Groups a string into nested arrays based on parenthesis in the input string.
+def parse_parentheses(self, s):
+    groups = []
+    depth = 0
+
+    try:
+        for char in s:
+            if char == '(':
+                self._push([], groups, depth)
+                depth += 1
+            elif char == ')':
+                depth -= 1
+            else:
+                self._push(char, groups, depth)
+    except IndexError:
+        raise ValueError('Parentheses mismatch')
+
+    if depth > 0:
+        raise ValueError('Parentheses mismatch')
+    else:
+        return groups
+
+
 class Parser:
     def __init__(self, ruleset: Ruleset = None, rounding: int = 8):
         if ruleset is None:
@@ -91,36 +123,6 @@ class Parser:
     def _get_free_unicode_char(self):
         self.unicode_char_count += 1
         return chr(1000 + self.unicode_char_count)
-
-    # Used by parenthesis matching function.
-    def _push(self, obj, l, depth):
-        while depth:
-            l = l[-1]
-            depth -= 1
-
-        l.append(obj)
-
-    # Groups a string into nested arrays based on parenthesis in the input string.
-    def _parse_parentheses(self, s):
-        groups = []
-        depth = 0
-
-        try:
-            for char in s:
-                if char == '(':
-                    self._push([], groups, depth)
-                    depth += 1
-                elif char == ')':
-                    depth -= 1
-                else:
-                    self._push(char, groups, depth)
-        except IndexError:
-            raise ValueError('Parentheses mismatch')
-
-        if depth > 0:
-            raise ValueError('Parentheses mismatch')
-        else:
-            return groups
 
     # Pre-processes a grouped expression before calculations are made.
     def _clean(self, grouped_expr):
@@ -239,8 +241,8 @@ class Parser:
 
     def eval(self, raw_in: str):
         for i, c in enumerate(raw_in):
-            if i-2 >= 0:
-                if c in '1234567890.' and raw_in[i-2] in '1234567890.' and raw_in[i-1] == ' ':
+            if i - 2 >= 0:
+                if c in '1234567890.' and raw_in[i - 2] in '1234567890.' and raw_in[i - 1] == ' ':
                     raise Exception('Found space between two digits, but no operator in-between.')
 
         raw_in = raw_in.replace(' ', '')
@@ -249,7 +251,7 @@ class Parser:
         for k, v in [*self.translateList.items(), *self.funTranslateList.items(), *self.varTranslateList.items()]:
             translated_in = translated_in.replace(k, v)
 
-        raw_grouped = self._parse_parentheses(translated_in)
+        raw_grouped = self.parse_parentheses(translated_in)
 
         fun_grouped = self._fun(raw_grouped)
 

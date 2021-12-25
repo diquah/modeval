@@ -1,6 +1,6 @@
 # modeval
 
-![](https://img.shields.io/badge/license-MIT-blue) ![](https://img.shields.io/badge/python-3.7_--_3.10-yellowgreen)
+![](https://img.shields.io/badge/license-MIT-blue) ![](https://img.shields.io/badge/python-3.x-yellowgreen)
 
 Modeval (or Modular Eval) is a modular and secure string evaluation library that can be used to create custom parsers or interpreters.
 
@@ -29,6 +29,12 @@ p = Parser()
 print( p.eval('1 * (2-3)') )
 ```
 
+### Utilities
+
+The function `parse_parentheses()` is also available for use. It takes one string as an input and will output a nested array depending on the parenthesis grouping in the input string.
+
+For example: `parse_parentheses('ab(c(d))') ==> ['a', 'b', ['c', ['d']]]`
+
 ### Rulesets 
 
 The Parser class will use a basic mathematical ruleset if no ruleset is specified. Use the default ruleset as a guide on how to make custom ones.
@@ -55,7 +61,7 @@ meval('1+1', ruleset=default_ruleset) # Rulesets can also be supplied to meval()
 
 The second item in the tuple must be the function that will be called when the operator is used. The attached method must have two inputs *in the correct order* (`L + R` is parsed as `add(L, R)`).
 
-Modeval also supports functions like `sin()`, but they are not included in the default ruleset. However, they are included in `scientific_ruleset` which can be imported and used. Implementing functions works as follows:
+Modeval also supports functions like `sin()`, but they are not included in the default ruleset. However, they are included in `scientific_ruleset` which can be imported and used. Adding custom functions works as follows:
 
 ```python
 from modeval import Parser, Ruleset
