@@ -41,6 +41,7 @@ class Parser:
         self.ruleset = ruleset
         self.rounding = rounding
 
+        self.unicode_char_count = 0
         # Initialize operators in different formats for eval function.
         self.translateList = {}
         self.op_lookup = {}
@@ -56,7 +57,7 @@ class Parser:
                     self.op_filter.append(symbol)
                 else:
                     # Convert multi character operators to unique single unicode character.
-                    self.translateList[symbol] = chr(1000 + len(self.translateList))
+                    self.translateList[symbol] = self._get_free_unicode_char()
                     self.op_filter.append(self.translateList[symbol])
             self.ops.append(new_group)
 
@@ -66,7 +67,7 @@ class Parser:
         self.functions = []
         for fun in self.ruleset.functions:
             name = fun[0]
-            self.funTranslateList[name] = chr(5000 + len(self.funTranslateList))
+            self.funTranslateList[name] = self._get_free_unicode_char()
             self.fun_lookup[name] = fun[1]
             self.functions.append(name)
 
@@ -75,9 +76,13 @@ class Parser:
         self.variables = []
         for var in self.ruleset.variables:
             name = var[0]
-            self.varTranslateList[name] = chr(9000 + len(self.varTranslateList))
+            self.varTranslateList[name] = self._get_free_unicode_char()
             self.var_lookup[name] = var[1]
             self.variables.append(name)
+
+    def _get_free_unicode_char(self):
+        self.unicode_char_count += 1
+        return chr(1000 + self.unicode_char_count)
 
     def _push(self, obj, l, depth):
         while depth:
