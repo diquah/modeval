@@ -121,6 +121,9 @@ class Parser:
             self.var_lookup[name] = var[1]
             self.variables.append(name)
 
+        self.global_translate_list = [*self.translateList.items(), *self.funTranslateList.items(), *self.varTranslateList.items()]
+        self.recognized_chars = [*self.op_filter, *self.fun_filter, *self.varTranslateList.values()]
+
     # Fetch a unique unicode character that can be used in place of multi-character ops/funcs/vars during parsing.
     def _get_free_unicode_char(self):
         self.unicode_char_count += 1
@@ -139,7 +142,7 @@ class Parser:
                     buffer = float(buffer)
                     clean_expr.append(buffer)
                     buffer = ''
-                if seg in [*self.op_filter, *self.fun_filter, *self.varTranslateList.values()]:
+                if seg in self.recognized_chars:
                     if i - 1 >= 0 and seg != '-' and grouped_expr[i-1] != '-':
                         if grouped_expr[i - 1] in self.op_filter and seg in self.op_filter:
                             raise Exception(f'Two operators in a row. {grouped_expr[i-1]}, {grouped_expr[i]}')
@@ -242,7 +245,7 @@ class Parser:
         raw_in = raw_in.replace(' ', '')
 
         translated_in = raw_in
-        for k, v in [*self.translateList.items(), *self.funTranslateList.items(), *self.varTranslateList.items()]:
+        for k, v in self.global_translate_list:
             translated_in = translated_in.replace(k, v)
 
         raw_grouped = parse_parentheses(translated_in)

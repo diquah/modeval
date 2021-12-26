@@ -29,12 +29,6 @@ p = Parser()
 print( p.eval('1 * (2-3)') )
 ```
 
-### Utilities
-
-The function `parse_parentheses()` is also available for use. It takes one string as an input and will output a nested array depending on the parenthesis grouping in the input string.
-
-For example: `parse_parentheses('ab(c(d))') ==> ['a', 'b', ['c', ['d']]]`
-
 ### Rulesets 
 
 The Parser class will use a basic mathematical ruleset if no ruleset is specified. Use the default ruleset as a guide on how to make custom ones.
@@ -96,6 +90,12 @@ custom_ruleset.variables = [
 p = Parser(ruleset = custom_ruleset)
 # Now you can use "pi" just like any other number.
 ```
+
+### Utilities
+
+The function `parse_parentheses()` is also available for use. It takes one string as an input and will output a nested array depending on the parenthesis grouping in the input string.
+
+For example: `parse_parentheses('ab(c(d))') ==> ['a', 'b', ['c', ['d']]]`
 
 ### Technical Limitations
 

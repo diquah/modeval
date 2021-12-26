@@ -58,7 +58,7 @@ class Expression(object):
 
 
 expressions = []
-with alive_bar(10000, title='Generating Expressions', stats=None, elapsed=None) as bar:
+with alive_bar(10000, title='Generating Expressions', stats=None) as bar:
     for i in range(10000):
         bar()
         while True:
@@ -81,7 +81,7 @@ with alive_bar(10000, title='Generating Expressions', stats=None, elapsed=None) 
 
 p = modeval.Parser(ruleset=modeval.scientific_ruleset)
 
-with alive_bar(10000, title='Testing Expressions', stats=None, elapsed=None) as bar:
+with alive_bar(10000, title='Testing Expressions', stats=None) as bar:
     for i, v in enumerate(expressions):
         eval_result = round(eval(v), 8)
         parser_result = p.eval(v)
