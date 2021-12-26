@@ -2,4 +2,5 @@
 .idea/
 dist/
 src/modeval.egg-info
+src/modeval/__pycache__
 build_shortcuts

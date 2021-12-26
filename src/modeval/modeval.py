@@ -139,15 +139,14 @@ class Parser:
                     buffer = float(buffer)
                     clean_expr.append(buffer)
                     buffer = ''
-
                 if seg in [*self.op_filter, *self.fun_filter, *self.varTranslateList.values()]:
-                    if i - 1 >= 0:
+                    if i - 1 >= 0 and seg != '-' and grouped_expr[i-1] != '-':
                         if grouped_expr[i - 1] in self.op_filter and seg in self.op_filter:
-                            raise Exception('Two operators in a row.')
+                            raise Exception(f'Two operators in a row. {grouped_expr[i-1]}, {grouped_expr[i]}')
 
                     # Leave any operators, functions, and variables alone.
                     clean_expr.append(seg)
-                elif seg not in '1234567890.':  # If item is not recognized, handle errors.
+                elif seg not in '1234567890.-':  # If item is not recognized, handle errors.
                     unknown = ''
                     for j in grouped_expr[i:]:
                         if isinstance(j, list):
