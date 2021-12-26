@@ -18,7 +18,7 @@ setup(
     author='Diquah',
     long_description=read_desc(),
     long_description_content_type='text/markdown',
-    url='https://github.com/diquah/modeval',
+    url=f'https://github.com/diquah/modeval/tree/v{VERSION}',
     download_url=f'https://github.com/diquah/modeval/archive/refs/tags/v{VERSION}.tar.gz',
     keywords=['eval', 'expression', 'parser', 'math', 'string', 'modular'],
     install_requires=[],
