@@ -221,9 +221,8 @@ if __name__ == '__main__':
     p = Parser(ruleset=scientific_ruleset)
     try:
         while True:
-            print(p.eval(input('>> ')))
             try:
-                pass
+                print(p.eval(input('>> ')))
             except KeyboardInterrupt:
                 break
     except KeyboardInterrupt:
