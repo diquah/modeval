@@ -96,7 +96,3 @@ p = Parser(ruleset = custom_ruleset)
 The function `parse_parentheses()` is also available for use. It takes one string as an input and will output a nested array depending on the parenthesis grouping in the input string.
 
 For example: `parse_parentheses('ab(c(d))') ==> ['a', 'b', ['c', ['d']]]`
-
-### Technical Limitations
-
-Multi-character operators, functions, and variables are assigned a single Unicode character during processing. This means that you have a limit of 143,697 operators/functions/variables. This is 1,000 less than the Unicode limit, since the first few unicode characters are used for letters and numbers.

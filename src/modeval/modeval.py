@@ -11,7 +11,7 @@ class Ruleset:
 
 default_ruleset = Ruleset()
 default_ruleset.operators = [
-    [('^', operator.pow), ('**', operator.pow)],
+    [('**', operator.pow)],
     [('*', operator.mul), ('/', operator.truediv)],
     [('+', operator.add), ('-', operator.sub)]
 ]
@@ -66,131 +66,96 @@ def parse_parentheses(s):
 
 
 class Parser:
-    def __init__(self, ruleset: Ruleset = None, rounding: int = 8):
-        if ruleset is None:
-            ruleset = default_ruleset
-
+    def __init__(self, ruleset: Ruleset = default_ruleset):
         self.ruleset = ruleset
-        self.rounding = rounding
-        self.unicode_char_count = 0
 
-        keys = []
-        # Check for multiple assignments to the same character(s).
-        for key in [*self.ruleset.functions, *self.ruleset.variables, *[x for y in self.ruleset.operators for x in y]]:
-            if key[0] in keys:
-                raise Exception(f"'{key[0]}' is used more than once as a operator/function/variable.")
-            keys.append(key[0])
+        self.operator_filter = []
+        self.operator_lookup = {}
+        for op_layer in self.ruleset.operators:
+            for op in op_layer:
+                self.operator_filter.append(op[0])
+                self.operator_lookup[op[0]] = op[1]
 
-        # Initialize operators in different formats used by different steps in the eval process.
-        self.translateList = {}
-        self.op_lookup = {}
-        self.op_filter = []
-        self.ops = []
-        for group in self.ruleset.operators:
-            new_group = []
-            for op in group:
-                symbol = op[0]
-                new_group.append(symbol)
-                self.op_lookup[symbol] = op[1]
-                if len(symbol) == 1:
-                    self.op_filter.append(symbol)
-                else:
-                    self.translateList[symbol] = self._get_free_unicode_char()
-                    self.op_filter.append(self.translateList[symbol])
-            self.ops.append(new_group)
+        self.function_filter = []
+        self.function_lookup = {}
+        for func in self.ruleset.functions:
+            self.function_filter.append(func[0])
+            self.function_lookup[func[0]] = func[1]
 
-        # Initialize functions in different formats used by different steps in the eval process.
-        self.funTranslateList = {}
-        self.fun_lookup = {}
-        self.fun_filter = []
-        self.functions = []
-        for fun in self.ruleset.functions:
-            name = fun[0]
-            self.funTranslateList[name] = self._get_free_unicode_char()
-            self.fun_filter.append(self.funTranslateList[name])
-            self.fun_lookup[name] = fun[1]
-            self.functions.append(name)
-
-        # Initialize variables in different formats used by different steps in the eval process.
-        self.varTranslateList = {}
-        self.var_lookup = {}
-        self.variables = []
+        self.variable_lookup = {}
         for var in self.ruleset.variables:
-            name = var[0]
-            self.varTranslateList[name] = self._get_free_unicode_char()
-            self.var_lookup[name] = var[1]
-            self.variables.append(name)
+            self.variable_lookup[var[0]] = var[1]
 
-        self.global_translate_list = [*self.translateList.items(), *self.funTranslateList.items(), *self.varTranslateList.items()]
-        self.recognized_chars = [*self.op_filter, *self.fun_filter, *self.varTranslateList.values()]
+    def _clean(self, grouped):
+        cleaned = []
+        num_buffer = ''
+        op_buffer = ''
+        char_buffer = ''
+        for i, v in enumerate(grouped):
+            if isinstance(v, str):
+                if v in '1234567890.':
+                    num_buffer += v
+                elif num_buffer != '':
+                    cleaned.append(float(num_buffer))
+                    num_buffer = ''
 
-    # Fetch a unique unicode character that can be used in place of multi-character ops/funcs/vars during parsing.
-    def _get_free_unicode_char(self):
-        self.unicode_char_count += 1
-        return chr(1000 + self.unicode_char_count)
+                if v in self.operator_filter:
+                    op_buffer += v
+                elif op_buffer != '':
+                    cleaned.append(op_buffer)
+                    op_buffer = ''
 
-    # Pre-processes a grouped expression before calculations are made.
-    def _clean(self, grouped_expr):
-        clean_expr = []
+                if v not in [*'1234567890.', *self.operator_filter]:
+                    char_buffer += v
+                elif char_buffer != '':
+                    cleaned.append(char_buffer)
+                    char_buffer = ''
 
-        buffer = ''
-        for i, seg in enumerate(grouped_expr):
-            if not isinstance(seg, list):
-                if seg in '1234567890.':  # If item is part of a number, add to buffer.
-                    buffer += seg
-                elif buffer != '':  # If item is not part of a number and buffer is not empty, flush buffer.
-                    buffer = float(buffer)
-                    clean_expr.append(buffer)
-                    buffer = ''
-                if seg in self.recognized_chars:
-                    if i - 1 >= 0 and seg != '-' and grouped_expr[i-1] != '-':
-                        if grouped_expr[i - 1] in self.op_filter and seg in self.op_filter:
-                            raise Exception(f'Two operators in a row. {grouped_expr[i-1]}, {grouped_expr[i]}')
+            elif isinstance(v, list):
+                if num_buffer != '':
+                    cleaned.append(float(num_buffer))
+                    num_buffer = ''
+                if char_buffer != '':
+                    cleaned.append(char_buffer)
+                    char_buffer = ''
+                if op_buffer != '':
+                    cleaned.append(op_buffer)
+                    op_buffer = ''
 
-                    # Leave any operators, functions, and variables alone.
-                    clean_expr.append(seg)
-                elif seg not in '1234567890.-':  # If item is not recognized, handle errors.
-                    unknown = ''
-                    for j in grouped_expr[i:]:
-                        if isinstance(j, list):
-                            break
-                        elif j not in '1234567890.':
-                            unknown += j
-                        else:
-                            break
-                    raise Exception(f"'{unknown}' is not a recognized variable, function, or operator.")
+                cleaned.append(self._clean(v))
+
+        if num_buffer != '':
+            cleaned.append(float(num_buffer))
+        if char_buffer != '':
+            cleaned.append(char_buffer)
+        if op_buffer != '':
+            cleaned.append(op_buffer)
+
+        return cleaned
+
+    def _fill_vars(self, cleaned):
+        filled = cleaned
+        for i, v in enumerate(cleaned):
+            if isinstance(v, list):
+                filled[i] = self._fill_vars(v)
             else:
-                # If item is an array (inside parenthesis), handle recursively.
-                clean_expr.append(self._clean(seg))
-
-        if buffer != '':   # If buffer is not cleared after last iteration, flush.
-            clean_expr.append(float(buffer))
-
-        for i, n in enumerate(clean_expr):   # Translate single unicode character to corresponding op/var.
-            if isinstance(n, str):
-                for k, v in self.translateList.items():
-                    if n == v:
-                        clean_expr[i] = n.replace(v, k)
-                for k, v in self.varTranslateList.items():
-                    if n == v:
-                        clean_expr[i] = self.var_lookup[n.replace(v, k)]
-                for k, v in self.funTranslateList.items():
-                    if n == v:
-                        clean_expr[i] = n.replace(v, k)
-
-        return clean_expr
+                if v in self.variable_lookup.keys():
+                    filled[i] = self.variable_lookup[v]
+                else:
+                    filled[i] = v
+        return filled
 
     # Applies an operator based on the symbol defined in the ruleset.
     def _operate(self, a, symbol, b):
-        return self.op_lookup[symbol](a, b)
+        return self.operator_lookup[symbol](a, b)
 
     # Applies a function based on the string name defined in the ruleset.
     def _function(self, fun_name, a):
-        return self.fun_lookup[fun_name](a)
+        return self.function_lookup[fun_name](a)
 
     # Reduces and simplifies nested arrays, numbers, operators, and functions recursively.
     def _calc(self, arr):
-        for ops in self.ops:
+        for ops in self.operator_filter:
             i = 0
             a = None
             op = None
@@ -213,13 +178,13 @@ class Parser:
                         a = arr[i]
                         op = None
                 elif isinstance(arr[i], str):
-                    if arr[i] == "-" and (i == 0 or isinstance(arr[i - 1], str) and arr[i - 1] in self.op_filter):
+                    if arr[i] == "-" and (i == 0 or isinstance(arr[i - 1], str) and arr[i - 1] in self.operator_filter):
                         negate = not negate
                         arr.pop(i)
                         i -= 1
                     elif arr[i] in ops:
                         op = arr[i]
-                    elif arr[i] in self.functions:
+                    elif arr[i] in self.function_filter:
                         if i + 1 < len(arr) and isinstance(arr[i + 1], list):
                             arr[i] = self._function(arr[i], self._calc(arr[i + 1]))
                             arr.pop(i + 1)
@@ -236,38 +201,12 @@ class Parser:
         else:
             return None
 
-    def eval(self, raw_in: str):
-        for i, c in enumerate(raw_in):
-            if i - 2 >= 0:
-                if c in '1234567890.' and raw_in[i - 2] in '1234567890.' and raw_in[i - 1] == ' ':
-                    raise Exception('Found space between two digits, but no operator in-between.')
-
-        raw_in = raw_in.replace(' ', '')
-
-        translated_in = raw_in
-        for k, v in self.global_translate_list:
-            translated_in = translated_in.replace(k, v)
-
-        raw_grouped = parse_parentheses(translated_in)
-
-        clean_grouped = self._clean(raw_grouped)
-
-        calc = self._calc(clean_grouped)
-
-        if calc is None:
-            return None
-        elif isinstance(calc, complex):
-            calc = calc.real
-
-        if self.rounding > 0:
-            result = round(calc, self.rounding)
-            if result.is_integer():
-                result = int(result)
-            return result
-
-        result = calc
-        if result.is_integer():
-            result = int(result)
+    def eval(self, s):
+        s = s.replace(' ', '')
+        grouped = parse_parentheses(s)
+        cleaned = self._clean(grouped)
+        var_fill = self._fill_vars(cleaned)
+        result = self._calc(var_fill)
         return result
 
 
@@ -287,7 +226,5 @@ if __name__ == '__main__':
                 pass
             except KeyboardInterrupt:
                 break
-            except Exception as e:
-                print(e.args[0])
     except KeyboardInterrupt:
         pass
