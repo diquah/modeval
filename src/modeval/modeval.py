@@ -62,7 +62,8 @@ class Ruleset:
 
 
 class Parser:
-    def __init__(self, ruleset):
+    def __init__(self, ruleset=None):
+        ruleset = ruleset or Ruleset()
         self.operators = ruleset.operators
         self.functions = ruleset.functions
         self.constants = ruleset.constants
@@ -169,7 +170,7 @@ def meval(s: str, ruleset=Ruleset()):
 
 
 if __name__ == '__main__':
-    p = Parser(ruleset=scientific_ruleset)
+    p = Parser()
     try:
         while True:
             try:
