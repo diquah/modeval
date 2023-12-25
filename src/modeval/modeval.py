@@ -1,36 +1,15 @@
 import operator
 import math
+from math import *
+
+negative_char = chr(127)
 
 
-class Ruleset:
-    def __init__(self):
-        self.functions = []
-        self.operators = []
-        self.variables = []
-
-
-default_ruleset = Ruleset()
-default_ruleset.operators = [
-    [('**', operator.pow)],
-    [('*', operator.mul), ('/', operator.truediv)],
-    [('+', operator.add), ('-', operator.sub)]
-]
-
-scientific_ruleset = Ruleset()
-scientific_ruleset.operators = [
-    [('^', operator.pow), ('**', operator.pow)],
-    [('*', operator.mul), ('/', operator.truediv), ('%', operator.mod)],
-    [('+', operator.add), ('-', operator.sub)],
-]
-scientific_ruleset.functions = [
-    ('sin', math.sin),
-    ('cos', math.cos),
-    ('tan', math.tan),
-]
-scientific_ruleset.variables = [
-    ('pi', math.pi),
-    ('e', math.e),
-]
+def isnumeric(s: str):
+    result = True
+    for c in s:
+        result = result and c in "0123456789."
+    return result
 
 
 # Used by parenthesis matching function.
@@ -42,7 +21,6 @@ def _push(obj, l, depth):
     l.append(obj)
 
 
-# Groups a string into nested arrays based on parenthesis in the input string.
 def parse_parentheses(s):
     groups = []
     depth = 0
@@ -65,160 +43,134 @@ def parse_parentheses(s):
         return groups
 
 
+class Ruleset:
+    def __init__(self, operators=None, functions=None, constants=None):
+        self.operators = operators or [
+            {'^': operator.pow, '**': operator.pow},
+            {'*': operator.mul, '/': operator.truediv, '%': operator.mod},
+            {'+': operator.add, '-': operator.sub}
+        ]
+        self.functions = functions or {
+            'math:sin': math.sin,
+            'math:cos': math.cos,
+            'math:tan': math.tan
+        }
+        self.constants = constants or {
+            'math:pi': math.pi,
+            'math:e': math.e
+        }
+
+
 class Parser:
-    def __init__(self, ruleset: Ruleset = default_ruleset):
-        self.ruleset = ruleset
+    def __init__(self, ruleset=None):
+        ruleset = ruleset or Ruleset()
+        self.operators = ruleset.operators
+        self.functions = ruleset.functions
+        self.constants = ruleset.constants
+        self.before_negative = set(c for opset in self.operators for k in opset.keys() for c in k)
 
-        self.operator_filter = []
-        self.operator_lookup = {}
-        for op_layer in self.ruleset.operators:
-            for op in op_layer:
-                self.operator_filter.append(op[0])
-                self.operator_lookup[op[0]] = op[1]
-
-        self.function_filter = []
-        self.function_lookup = {}
-        for func in self.ruleset.functions:
-            self.function_filter.append(func[0])
-            self.function_lookup[func[0]] = func[1]
-
-        self.variable_lookup = {}
-        for var in self.ruleset.variables:
-            self.variable_lookup[var[0]] = var[1]
-
-    def _clean(self, grouped):
-        cleaned = []
-        num_buffer = ''
-        op_buffer = ''
-        char_buffer = ''
-        for i, v in enumerate(grouped):
-            if isinstance(v, str):
-                if v in '1234567890.':
-                    num_buffer += v
-                elif num_buffer != '':
-                    cleaned.append(float(num_buffer))
-                    num_buffer = ''
-
-                if v in self.operator_filter:
-                    op_buffer += v
-                elif op_buffer != '':
-                    cleaned.append(op_buffer)
-                    op_buffer = ''
-
-                if v not in [*'1234567890.', *self.operator_filter]:
-                    char_buffer += v
-                elif char_buffer != '':
-                    cleaned.append(char_buffer)
-                    char_buffer = ''
-
-            elif isinstance(v, list):
-                if num_buffer != '':
-                    cleaned.append(float(num_buffer))
-                    num_buffer = ''
-                if char_buffer != '':
-                    cleaned.append(char_buffer)
-                    char_buffer = ''
-                if op_buffer != '':
-                    cleaned.append(op_buffer)
-                    op_buffer = ''
-
-                cleaned.append(self._clean(v))
-
-        if num_buffer != '':
-            cleaned.append(float(num_buffer))
-        if char_buffer != '':
-            cleaned.append(char_buffer)
-        if op_buffer != '':
-            cleaned.append(op_buffer)
-
-        return cleaned
-
-    def _fill_vars(self, cleaned):
-        filled = cleaned
-        for i, v in enumerate(cleaned):
-            if isinstance(v, list):
-                filled[i] = self._fill_vars(v)
+    def _replace_chars(self, s: str):
+        new = []
+        for i, v in enumerate(s):
+            if v == "-" and (i == 0 or s[i-1][-1] in self.before_negative):
+                new.append(negative_char)
             else:
-                if v in self.variable_lookup.keys():
-                    filled[i] = self.variable_lookup[v]
+                new.append(v)
+        return ''.join(new)
+
+    def _group(self, arr: list):
+        new_arr = []
+        buffer = []
+        mode = "number"
+        for x in arr:
+            # lists have to be recursively checked
+            if isinstance(x, list):
+                if len(buffer) > 0:
+                    new_arr.append(''.join(buffer))
+                    buffer = []
+                new_arr.append(self._group(x))
+                continue
+            # change of mode
+            elif mode == "number" and not isnumeric(x) or mode == "text" and not x.isalpha() or \
+                    mode == "special" and (isnumeric(x) or x.isalpha()) or x == negative_char:
+                if len(buffer) > 0:
+                    new_arr.append(''.join(buffer))
+                    buffer = []
+                # set new mode
+                if isnumeric(x):
+                    mode = "number"
+                elif x.isalpha():
+                    mode = "text"
                 else:
-                    filled[i] = v
-        return filled
+                    mode = "special"
+            buffer.append(x)
+        if len(buffer) > 0:
+            new_arr.append(''.join(buffer))
+        return new_arr
 
-    # Applies an operator based on the symbol defined in the ruleset.
-    def _operate(self, a, symbol, b):
-        return self.operator_lookup[symbol](a, b)
+    def _eval(self, arr: list):
+        # first pass over constants and recursive
+        for i, v in enumerate(arr):
+            if isinstance(v, list):
+                arr[i] = self._eval(v)
+            elif v in self.constants:
+                arr[i] = self.constants[v]
 
-    # Applies a function based on the string name defined in the ruleset.
-    def _function(self, fun_name, a):
-        return self.function_lookup[fun_name](a)
+        # second pass over functions and numbers
+        i = 0
+        negate = False
+        while i < len(arr):
+            v = arr[i]
+            if v == negative_char:
+                negate = True
+                arr.pop(i)
+                continue  # skip loop including increment
+            elif isnumeric(v):
+                arr[i] = float(v)
+            elif isinstance(v, str) and v in self.functions:
+                arr.pop(i)
+                arr[i] = self.functions[v](arr[i])
 
-    # Reduces and simplifies nested arrays, numbers, operators, and functions recursively.
-    def _calc(self, arr):
-        for ops in self.operator_filter:
+            if negate and isinstance(arr[i], float):
+                arr[i] = -arr[i]
+                negate = False
+            i += 1
+
+        # third pass over operators
+        for opset in self.operators:
             i = 0
-            a = None
-            op = None
-            negate = False
             while i < len(arr):
-                if isinstance(arr[i], float):
-                    if i - 1 >= 0:
-                        if isinstance(arr[i - 1], float):
-                            raise Exception('Expected operator in-between two numbers.')
-                    if negate:
-                        arr[i] *= -1
-                        negate = False
-                    if op is None:
-                        a = arr[i]
-                    else:
-                        i -= 2
-                        arr.pop(i)
-                        arr.pop(i)
-                        arr[i] = self._operate(a, op, arr[i])
-                        a = arr[i]
-                        op = None
-                elif isinstance(arr[i], str):
-                    if arr[i] == "-" and (i == 0 or isinstance(arr[i - 1], str) and arr[i - 1] in self.operator_filter):
-                        negate = not negate
-                        arr.pop(i)
-                        i -= 1
-                    elif arr[i] in ops:
-                        op = arr[i]
-                    elif arr[i] in self.function_filter:
-                        if i + 1 < len(arr) and isinstance(arr[i + 1], list):
-                            arr[i] = self._function(arr[i], self._calc(arr[i + 1]))
-                            arr.pop(i + 1)
-                            i -= 1
-                        else:
-                            raise Exception('Function was not supplied parameter.')
-                elif isinstance(arr[i], list):
-                    arr[i] = self._calc(arr[i])
+                v = arr[i]
+                if v == negative_char:
+                    negate = True
+                    arr.pop(i)
+                    continue  # skip loop including increment
+                elif v in opset:
                     i -= 1
+                    a = arr.pop(i)
+                    arr.pop(i)
+                    arr[i] = opset[v](a, arr[i])
+                    if negate:
+                        arr[i] = -arr[i]
+                        negate = False
                 i += 1
 
-        if len(arr) > 0:
-            return arr[0]
-        else:
-            return None
+        # hopefully there is only one number left
+        return arr[0]
 
-    def eval(self, s):
-        s = s.replace(' ', '')
-        grouped = parse_parentheses(s)
-        cleaned = self._clean(grouped)
-        var_fill = self._fill_vars(cleaned)
-        result = self._calc(var_fill)
-        return result
+    def eval(self, s: str):
+        s = ''.join(s.lower().split())
+        replaced = self._replace_chars(s)
+        organized = self._group(parse_parentheses(replaced))
+        return self._eval(organized)
 
 
-def meval(input_str: str, ruleset: Ruleset = None):
-    if ruleset is None:
-        ruleset = default_ruleset
-    temp_parser = Parser(ruleset=ruleset)
-    return temp_parser.eval(input_str)
+def meval(s: str, ruleset=Ruleset()):
+    return Parser(ruleset).eval(s)
 
 
 if __name__ == '__main__':
-    p = Parser(ruleset=scientific_ruleset)
+    p = Parser()
     try:
         while True:
             try:
